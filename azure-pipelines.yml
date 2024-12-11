@@ -1,10 +1,10 @@
 trigger:
   branches:
     include:
-      - main  # Change this to your default branch
+      - main  
 
 pool:
-  vmImage: 'windows-latest'  # Use the latest Windows image provided by Microsoft
+  vmImage: 'windows-latest' 
 
 variables:
   vmIPAddress: 'YOUR_VM_IP_ADDRESS'  
@@ -48,7 +48,7 @@ steps:
     inputs:
       sshEndpoint: 'VMConnection'
       sourceFolder: '$(Build.ArtifactStagingDirectory)'
-      targetFolder: '/home/$(vmUsername)/$(deploymentFolder)'  # Adjust the target folder path based on your VM's OS
+      targetFolder: 'C:\\DeploymentFolder' 
 
   # Run Deployment Commands on Virtual Machine
   - task: SSH@0
