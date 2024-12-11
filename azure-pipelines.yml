@@ -6,21 +6,56 @@ trigger:
 pool:
   vmImage: 'windows-latest'  # Use the latest Windows image provided by Microsoft
 
+variables:
+  vmIPAddress: 'YOUR_VM_IP_ADDRESS'  
+  vmUsername: 'YOUR_VM_USERNAME'    
+  vmPassword: 'YOUR_VM_PASSWORD'   
+  deploymentFolder: 'deploy'        
+
 steps:
+  # Restore Dependencies
   - task: DotNetCoreCLI@2
     displayName: 'Restore Dependencies'
     inputs:
       command: 'restore'
-      projects: '**/*.csproj'  # Adjust if your project file is in a specific location
+      projects: '**/*.csproj'
 
+  # Build Application
   - task: DotNetCoreCLI@2
     displayName: 'Build Application'
     inputs:
       command: 'build'
       projects: '**/*.csproj'
 
+  # Run Tests
   - task: DotNetCoreCLI@2
     displayName: 'Run Tests'
     inputs:
       command: 'test'
       projects: '**/*.csproj'
+
+  # Publish Application
+  - task: DotNetCoreCLI@2
+    displayName: 'Publish Application'
+    inputs:
+      command: 'publish'
+      projects: '**/*.csproj'
+      arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'
+
+  # Copy Files to Virtual Machine
+  - task: CopyFilesOverSSH@0
+    displayName: 'Copy Files to Virtual Machine'
+    inputs:
+      sshEndpoint: 'VMConnection'
+      sourceFolder: '$(Build.ArtifactStagingDirectory)'
+      targetFolder: '/home/$(vmUsername)/$(deploymentFolder)'  # Adjust the target folder path based on your VM's OS
+
+  # Run Deployment Commands on Virtual Machine
+  - task: SSH@0
+    displayName: 'Deploy Application on Virtual Machine'
+    inputs:
+      sshEndpoint: 'VMConnection'
+      commands: |
+        cd /home/$(vmUsername)/$(deploymentFolder)
+        # Add commands to deploy/start your application, e.g.,
+        # dotnet MyApp.dll for .NET applications
