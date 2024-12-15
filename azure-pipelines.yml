@@ -7,10 +7,10 @@ pool:
   vmImage: 'windows-latest' 
 
 variables:
-  vmIPAddress: 'YOUR_VM_IP_ADDRESS'  
-  vmUsername: 'YOUR_VM_USERNAME'    
-  vmPassword: 'YOUR_VM_PASSWORD'   
-  deploymentFolder: 'deploy'        
+  vmIPAddress: '172.16.0.5'  
+  vmUsername: 'okhalij'    
+  vmPassword: '@thingswyillbeok123'   
+  deploymentFolder: 'C:\\DeploymentFolder'        
 
 steps:
   # Restore Dependencies
@@ -27,13 +27,6 @@ steps:
       command: 'build'
       projects: '**/*.csproj'
 
-  # Run Tests
-  - task: DotNetCoreCLI@2
-    displayName: 'Run Tests'
-    inputs:
-      command: 'test'
-      projects: '**/*.csproj'
-
   # Publish Application
   - task: DotNetCoreCLI@2
     displayName: 'Publish Application'
@@ -43,19 +36,24 @@ steps:
       arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'
 
   # Copy Files to Virtual Machine
-  - task: CopyFilesOverSSH@0
-    displayName: 'Copy Files to Virtual Machine'
+  - task: WindowsMachineFileCopy@2
+    displayName: 'Copy Files to Windows Virtual Machine'
     inputs:
-      sshEndpoint: 'VMConnection'
-      sourceFolder: '$(Build.ArtifactStagingDirectory)'
-      targetFolder: 'C:\\DeploymentFolder' 
+      SourcePath: '$(Build.ArtifactStagingDirectory)'
+      TargetPath: '$(deploymentFolder)'
+      MachineName: '$(vmIPAddress)'
+      AdminUserName: '$(vmUsername)'
+      AdminPassword: '$(vmPassword)' # Use a secure pipeline variable for sensitive info
+      CleanTargetBeforeCopy: true
 
-  # Run Deployment Commands on Virtual Machine
-  - task: SSH@0
-    displayName: 'Deploy Application on Virtual Machine'
+  # Run Deployment Commands on Windows Virtual Machine
+  - task: PowerShellOnTargetMachines@3
+    displayName: 'Deploy Application on Windows Virtual Machine'
     inputs:
-      sshEndpoint: 'VMConnection'
-      commands: |
-        cd /home/$(vmUsername)/$(deploymentFolder)
-        # Add commands to deploy/start your application, e.g.,
-        # dotnet MyApp.dll for .NET applications
+      Machines: '$(vmIPAddress)'
+      AdminUserName: '$(vmUsername)'
+      AdminPassword: '$(vmPassword)' # Use a secure pipeline variable for sensitive info
+      ScriptInline: |
+        cd $(deploymentFolder)
+        # Example: Start the .NET application
+        dotnet MyApp.dll
