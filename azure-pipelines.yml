@@ -27,13 +27,13 @@ stages:
     - task: NuGetCommand@2
       inputs:
         command: 'restore'
-        restoreSolution: '**/*.sln'
+        restoreSolution: '**/*.csproj'
       displayName: 'Restore NuGet Packages'
 
     # Step 2: Build the application
     - task: VSBuild@1
       inputs:
-        solution: '**/*.sln'
+        solution: '**/*.csproj'
         msbuildArgs: '/p:TargetFrameworkVersion=v4.8 /p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
         platform: 'Any CPU'
         configuration: 'Release'
