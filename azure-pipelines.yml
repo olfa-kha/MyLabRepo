@@ -10,50 +10,63 @@ variables:
   vmIPAddress: '10.0.0.5'  
   vmUsername: 'okhalij'    
   vmPassword: '@Casanostra8'   
-  deploymentFolder: 'C:\\DeploymentFolder'        
+  deploymentFolder: 'C:\deployment'        
+  artifactName: 'testartifact'
+  
+stages:
+- stage: Build
+  displayName: 'Build and Publish Artifact'
+  jobs:
+  - job: 'BuildAndPublish'
+    displayName: 'Build .NET framework'
+    steps:
+    # Step 1: Install NuGet packages
+    - task: NuGetToolInstaller@1
+      displayName: 'Install NuGet'
 
-steps:
-  # Restore Dependencies
-  - task: DotNetCoreCLI@2
-    displayName: 'Restore Dependencies'
-    inputs:
-      command: 'restore'
-      projects: '**/*.csproj'
+    - task: NuGetCommand@2
+      inputs:
+        command: 'restore'
+        restoreSolution: '**/*.sln'
+      displayName: 'Restore NuGet Packages'
 
-  # Build Application
-  - task: DotNetCoreCLI@2
-    displayName: 'Build Application'
-    inputs:
-      command: 'build'
-      projects: '**/*.csproj'
+    # Step 2: Build the application
+    - task: VSBuild@1
+      inputs:
+        solution: '**/*.sln'
+        msbuildArgs: '/p:TargetFrameworkVersion=v4.8 /p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
+        platform: 'Any CPU'
+        configuration: 'Release'
+      displayName: 'Build Solution with .NET Framework 4.8'
 
-  # Publish Application
-  - task: DotNetCoreCLI@2
-    displayName: 'Publish Application'
-    inputs:
-      command: 'publish'
-      projects: '**/*.csproj'
-      arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'
+    # Step 3: Publish build artifact
+    - task: PublishPipelineArtifact@1
+      inputs:
+        pathToPublish: '$(Build.ArtifactStagingDirectory)'
+        artifactName: '$(artifactName)'  
+      displayName: 'Publish Build Artifact'
 
-  # Copy Files to Virtual Machine
-  - task: WindowsMachineFileCopy@2
-    displayName: 'Copy Files to Windows Virtual Machine'
-    inputs:
-      SourcePath: '$(Build.ArtifactStagingDirectory)'
-      TargetPath: '$(deploymentFolder)'
-      MachineName: '$(vmIPAddress)'
-      AdminUserName: '$(vmUsername)'
-      AdminPassword: '$(vmPassword)' # Use a secure pipeline variable for sensitive info
-      CleanTargetBeforeCopy: true
+- stage: DeployStg
+  displayName: 'Deploy to staging'
+  dependsOn: Build  # Ensure the Build stage completes successfully
+  jobs:
+  - job: DeployToVM
+    displayName: 'Deploy to Windows Virtual Machine'
+    Environment: 'Staging'
+    steps:
+      # Step 1: Download Artifact
+      - download: 'current'
+        artifact: '$(artifactName)'
+        displayName: 'Download Artifact'
 
-  # Run Deployment Commands on Windows Virtual Machine
-  - task: PowerShellOnTargetMachines@3
-    displayName: 'Deploy Application on Windows Virtual Machine'
-    inputs:
-      Machines: '$(vmIPAddress)'
-      AdminUserName: '$(vmUsername)'
-      AdminPassword: '$(vmPassword)' # Use a secure pipeline variable for sensitive info
-      ScriptInline: |
-        cd $(deploymentFolder)
-        # Example: Start the .NET application
-        dotnet MyApp.dll
+      # Step 2: Copy Files to Virtual Machine
+      - task: WindowsMachineFileCopy@2
+      displayName: 'Copy Files to Windows Virtual Machine'
+      inputs:
+        SourcePath: '$(Pipeline.Workspace)/$(artifactName)/*.zip'
+        deploymentMethod: 'zipDeploy'
+        TargetPath: '$(deploymentFolder)'
+        MachineName: '$(vmIPAddress)'
+        AdminUserName: '$(vmUsername)'
+        AdminPassword: '$(vmPassword)'
+        CleanTargetBeforeCopy: true
