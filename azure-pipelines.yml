@@ -62,7 +62,7 @@ stages:
       - task: WindowsMachineFileCopy@2
         displayName: 'Copy Files to Windows Virtual Machine'
         inputs:
-          SourcePath: '$(Pipeline.Workspace)/$(artifactName)/*.zip'
+          SourcePath: '$$(Build.ArtifactStagingDirectory).zip'
           deploymentMethod: 'zipDeploy'
           TargetPath: '$(deploymentFolder)'
           MachineNames: '$(vmIPAddress)'
