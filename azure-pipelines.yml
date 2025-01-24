@@ -10,7 +10,7 @@ variables:
   vmIPAddress: '10.0.0.5'  
   vmUsername: 'okhalij'    
   vmPassword: '@Casanostra8'   
-  deploymentFolder: 'C:\deployment\deployhere'        
+  deploymentFolder: 'C:\deployshare\sharing'        
   artifactName: 'testartifact'
   
 stages:
