@@ -63,10 +63,10 @@ stages:
       - task: WindowsMachineFileCopy@2
         displayName: 'Copy Files to Windows Virtual Machine'
         inputs:
-        SourcePath: '$(Pipeline.Workspace)/$(artifactName)/*.zip'
-        deploymentMethod: 'zipDeploy'
-        TargetPath: '$(deploymentFolder)'
-        MachineName: '$(vmIPAddress)'
-        AdminUserName: '$(vmUsername)'
-        AdminPassword: '$(vmPassword)'
-        CleanTargetBeforeCopy: true
+          SourcePath: '$(Pipeline.Workspace)/$(artifactName)/*.zip'
+          deploymentMethod: 'zipDeploy'
+          TargetPath: '$(deploymentFolder)'
+          MachineName: '$(vmIPAddress)'
+          AdminUserName: '$(vmUsername)'
+          AdminPassword: '$(vmPassword)'
+          CleanTargetBeforeCopy: true
