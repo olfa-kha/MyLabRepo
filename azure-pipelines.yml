@@ -65,7 +65,7 @@ stages:
           SourcePath: '$(Pipeline.Workspace)/$(artifactName)/*.zip'
           deploymentMethod: 'zipDeploy'
           TargetPath: '$(deploymentFolder)'
-          MachineName: '$(vmIPAddress)'
+          MachineNames: '$(vmIPAddress)'
           AdminUserName: '$(vmUsername)'
           AdminPassword: '$(vmPassword)'
       
