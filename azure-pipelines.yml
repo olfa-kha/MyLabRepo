@@ -52,7 +52,6 @@ stages:
   jobs:
   - job: DeployToVM
     displayName: 'Deploy to Windows Virtual Machine'
-    Environment: 'Staging'
     steps:
       # Step 1: Download Artifact
       - download: 'current'
@@ -69,4 +68,4 @@ stages:
           MachineName: '$(vmIPAddress)'
           AdminUserName: '$(vmUsername)'
           AdminPassword: '$(vmPassword)'
-          CleanTargetBeforeCopy: true
+      
